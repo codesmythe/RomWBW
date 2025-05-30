@@ -161,6 +161,18 @@
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#hard-disk-layout" class="nav-link">Hard Disk Layout</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#modern-hard-disk-layout-hd1k" class="nav-link">Modern Hard Disk Layout (hd1k)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#classic-hard-disk-layout-hd512" class="nav-link">Classic Hard Disk Layout (hd512)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#mapping-to-media-id" class="nav-link">Mapping to Media ID</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
               </ul>
@@ -191,6 +203,18 @@
               <ul class="nav flex-column">
             <li class="nav-item" data-bs-level="2"><a href="#romwbw-nvram-configuration" class="nav-link">RomWBW NVRAM Configuration</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#boot-options-nvsw_bootopts" class="nav-link">Boot Options (NVSW_BOOTOPTS)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#auto-boot-nvsw_autoboot" class="nav-link">Auto Boot (NVSW_AUTOBOOT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#status-reset-0xff" class="nav-link">Status Reset (0xFF)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
               </ul>
@@ -218,38 +242,366 @@
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#character-inputoutput-cio" class="nav-link">Character Input/Output (CIO)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x00-character-input-cioin" class="nav-link">Function 0x00 – Character Input (CIOIN)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x01-character-output-cioout" class="nav-link">Function 0x01 – Character Output (CIOOUT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x02-character-input-status-cioist" class="nav-link">Function 0x02 – Character Input Status (CIOIST)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x03-character-output-status-cioost" class="nav-link">Function 0x03 – Character Output Status (CIOOST)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x04-character-io-initialization-cioinit" class="nav-link">Function 0x04 – Character I/O Initialization (CIOINIT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x05-character-io-query-cioquery" class="nav-link">Function 0x05 – Character I/O Query (CIOQUERY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x06-character-io-device-ciodevice" class="nav-link">Function 0x06 – Character I/O Device (CIODEVICE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#disk-inputoutput-dio" class="nav-link">Disk Input/Output (DIO)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x10-disk-status-diostatus" class="nav-link">Function 0x10 – Disk Status (DIOSTATUS)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x11-disk-reset-dioreset" class="nav-link">Function 0x11 – Disk Reset (DIORESET)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x12-disk-seek-dioseek" class="nav-link">Function 0x12 – Disk Seek (DIOSEEK)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x13-disk-read-dioread" class="nav-link">Function 0x13 – Disk Read (DIOREAD)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x14-disk-write-diowrite" class="nav-link">Function 0x14 – Disk Write (DIOWRITE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x15-disk-verify-dioverify" class="nav-link">Function 0x15 – Disk Verify (DIOVERIFY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x16-disk-format-dioformat" class="nav-link">Function 0x16 – Disk Format (DIOFORMAT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x17-disk-device-diodevice" class="nav-link">Function 0x17 – Disk Device (DIODEVICE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x18-disk-media-diomedia" class="nav-link">Function 0x18 – Disk Media (DIOMEDIA)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x19-disk-define-media-diodefmed" class="nav-link">Function 0x19 – Disk Define Media (DIODEFMED)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x1a-disk-capacity-diocapacity" class="nav-link">Function 0x1A – Disk Capacity (DIOCAPACITY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x1b-disk-geometry-diogeometry" class="nav-link">Function 0x1B – Disk Geometry (DIOGEOMETRY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#real-time-clock-rtc" class="nav-link">Real Time Clock (RTC)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x20-rtc-get-time-rtcgettim" class="nav-link">Function 0x20 – RTC Get Time (RTCGETTIM)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x21-rtc-set-time-rtcsettim" class="nav-link">Function 0x21 – RTC Set Time (RTCSETTIM)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x22-rtc-get-nvram-byte-rtcgetbyt" class="nav-link">Function 0x22 – RTC Get NVRAM Byte (RTCGETBYT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x23-rtc-set-nvram-byte-rtcsetbyt" class="nav-link">Function 0x23 – RTC Set NVRAM Byte (RTCSETBYT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x24-rtc-get-nvram-block-rtcgetblk" class="nav-link">Function 0x24 – RTC Get NVRAM Block (RTCGETBLK)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x25-rtc-set-nvram-block-rtcsetblk" class="nav-link">Function 0x25 – RTC Set NVRAM Block (RTCSETBLK)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x26-rtc-get-alarm-rtcgetalm" class="nav-link">Function 0x26 – RTC Get Alarm (RTCGETALM)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x27-rtc-set-alarm-rtcsetalm" class="nav-link">Function 0x27 – RTC Set Alarm (RTCSETALM)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x28-rtc-device-rtcdevice" class="nav-link">Function 0x28 – RTC DEVICE (RTCDEVICE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#display-keypad-dsky" class="nav-link">Display Keypad (DSKY)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x30-dsky-reset-dskyreset" class="nav-link">Function 0x30 – DSKY Reset (DSKYRESET)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x31-dsky-dskystatus" class="nav-link">Function 0x31 – DSKY (DSKYSTATUS)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x32-dsky-get-key-dskygetkey" class="nav-link">Function 0x32 – DSKY Get Key (DSKYGETKEY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x33-dsky-show-hex-rtcshowhex" class="nav-link">Function 0x33 – DSKY Show HEX (RTCSHOWHEX)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x34-dsky-show-segments-dskyshowseg" class="nav-link">Function 0x34 – DSKY Show Segments (DSKYSHOWSEG)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x35-dsky-keypad-leds-dskykeyleds" class="nav-link">Function 0x35 – DSKY Keypad LEDs (DSKYKEYLEDS)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x36-dsky-status-led-dskystatled" class="nav-link">Function 0x36 – DSKY Status LED (DSKYSTATLED)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x37-dsky-beep-dskybeep" class="nav-link">Function 0x37 – DSKY Beep (DSKYBEEP)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x38-dsky-device-dskydevice" class="nav-link">Function 0x38 – DSKY Device (DSKYDEVICE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x39-dsky-device-dskymessage" class="nav-link">Function 0x39 – DSKY Device (DSKYMESSAGE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x3a-dsky-device-dskyevent" class="nav-link">Function 0x3A – DSKY Device (DSKYEVENT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#video-display-adapter-vda" class="nav-link">Video Display Adapter (VDA)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x40-video-initialize-vdaini" class="nav-link">Function 0x40 – Video Initialize (VDAINI)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x41-video-query-vdaqry" class="nav-link">Function 0x41 – Video Query (VDAQRY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x42-video-reset-vdares" class="nav-link">Function 0x42 – Video Reset (VDARES)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x43-video-device-vdadev" class="nav-link">Function 0x43 – Video Device (VDADEV)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x44-video-set-cursor-style-vdascs" class="nav-link">Function 0x44 – Video Set Cursor Style (VDASCS)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x45-video-set-cursor-position-vdascp" class="nav-link">Function 0x45 – Video Set Cursor Position (VDASCP)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x46-video-set-character-attribute-vdasat" class="nav-link">Function 0x46 – Video Set Character Attribute (VDASAT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x47-video-set-character-color-vdasco" class="nav-link">Function 0x47 – Video Set Character Color (VDASCO)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x48-video-write-character-vdawrc" class="nav-link">Function 0x48 – Video Write Character (VDAWRC)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x49-video-fill-vdafil" class="nav-link">Function 0x49 – Video Fill (VDAFIL)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x4a-video-copy-vdacpy" class="nav-link">Function 0x4A – Video Copy (VDACPY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x4b-video-scroll-vdascr" class="nav-link">Function 0x4B – Video Scroll (VDASCR)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x4c-video-keyboard-status-vdakst" class="nav-link">Function 0x4C – Video Keyboard Status (VDAKST)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x4d-video-keyboard-flush-vdakfl" class="nav-link">Function 0x4D – Video Keyboard Flush (VDAKFL)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x4e-video-keyboard-read-vdakrd" class="nav-link">Function 0x4E – Video Keyboard Read (VDAKRD)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x4f-read-a-character-at-current-video-position-vdardc" class="nav-link">Function 0x4F – Read a character at current video position (VDARDC)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#sound-snd" class="nav-link">Sound (SND)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x50-sound-reset-sndreset" class="nav-link">Function 0x50 – Sound Reset (SNDRESET)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x51-sound-volume-sndvol" class="nav-link">Function 0x51 – Sound Volume (SNDVOL)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x52-sound-period-sndprd" class="nav-link">Function 0x52 – Sound Period (SNDPRD)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x53-sound-note-sndnote" class="nav-link">Function 0x53 – Sound Note (SNDNOTE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x54-sound-play-sndplay" class="nav-link">Function 0x54 – Sound Play (SNDPLAY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x55-sound-query-sndquery" class="nav-link">Function 0x55 – Sound Query (SNDQUERY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x56-sound-duration-snddur" class="nav-link">Function 0x56 – Sound Duration (SNDDUR)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x57-sound-device-snddevice" class="nav-link">Function 0x57 – Sound Device (SNDDEVICE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0x58-sound-beep-sndbeep" class="nav-link">Function 0x58 – Sound Beep (SNDBEEP)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#extension-ext" class="nav-link">Extension (EXT)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xe0-calculate-slice-extslice" class="nav-link">Function 0xE0 – Calculate Slice (EXTSLICE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#system-sys" class="nav-link">System (SYS)</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf0-system-reset-sysreset" class="nav-link">Function 0xF0 – System Reset (SYSRESET)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf1-system-version-sysver" class="nav-link">Function 0xF1 – System Version (SYSVER)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf2-system-set-bank-syssetbnk" class="nav-link">Function 0xF2 – System Set Bank (SYSSETBNK)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf3-system-get-bank-sysgetbnk" class="nav-link">Function 0xF3 – System Get Bank (SYSGETBNK)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf4-system-set-copy-syssetcpy" class="nav-link">Function 0xF4 – System Set Copy (SYSSETCPY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf5-system-bank-copy-sysbnkcpy" class="nav-link">Function 0xF5 – System Bank Copy (SYSBNKCPY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf6-system-alloc-sysalloc" class="nav-link">Function 0xF6 – System Alloc (SYSALLOC)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf7-system-free-sysfree" class="nav-link">Function 0xF7 – System Free (SYSFREE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf8-system-get-sysget" class="nav-link">Function 0xF8 – System Get (SYSGET)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xf9-system-set-sysset" class="nav-link">Function 0xF9 – System Set (SYSSET)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xfa-system-peek-syspeek" class="nav-link">Function 0xFA – System Peek (SYSPEEK)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xfb-system-poke-syspoke" class="nav-link">Function 0xFB – System Poke (SYSPOKE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#function-0xfc-system-interrupt-management-sysint" class="nav-link">Function 0xFC – System Interrupt Management (SYSINT)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#proxy-functions" class="nav-link">Proxy Functions</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#invoke-hbios-function-invoke" class="nav-link">Invoke HBIOS Function (INVOKE)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#bank-select-bnksel" class="nav-link">Bank Select (BNKSEL)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#bank-copy-bnkcpy" class="nav-link">Bank Copy (BNKCPY)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#bank-call-bnkcall" class="nav-link">Bank Call (BNKCALL)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
               </ul>
@@ -259,14 +611,42 @@
               <ul class="nav flex-column">
             <li class="nav-item" data-bs-level="2"><a href="#run-time-errors" class="nav-link">Run Time Errors</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#panic" class="nav-link">PANIC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#syschk" class="nav-link">SYSCHK</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#error-level-reporting" class="nav-link">Error Level reporting</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#build-time-errors" class="nav-link">Build time errors</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#build-chain-tool-errors" class="nav-link">Build chain tool errors</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#assembly-time-check-errors" class="nav-link">Assembly time check errors</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
             <li class="nav-item" data-bs-level="2"><a href="#diagnostics" class="nav-link">Diagnostics</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#diagnostic-leds" class="nav-link">Diagnostic LEDs</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#appendix-a-driver-instance-data-fields" class="nav-link">Appendix A Driver Instance Data fields</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
               </ul>
