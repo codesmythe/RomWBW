@@ -7,7 +7,7 @@
 **RomWBW Introduction** \
 Version 3.7 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-10 Nov 2026
+22 Nov 2026
 
 # Overview
 

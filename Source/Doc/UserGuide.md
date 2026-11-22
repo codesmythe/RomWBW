@@ -3046,8 +3046,8 @@ Phillip may be contacted via his
 ## Fuzix
 
 Fuzix is a Unix-ish operating system for small systems.  It is the work 
-of Alan Cox and is hosted on GitHub at
-<https://github.com/EtchedPixels/FUZIX>. Fuzix itself is a stand-alone 
+of Alan Cox and is hosted on Codeberg at
+<https://codeberg.org/EtchedPixels/FUZIX>. Fuzix itself is a stand-alone 
 operating system, but it frequently utilizes RomWBW to boot and launch 
 on RomWBW-supported platforms.
 
@@ -3149,7 +3149,7 @@ To boot into Fuzix:
   ```
 
 You may now use Fuzix as desired.  The general operation and use of
-Fuzix is outside of the scope of this document.
+Fuzix is outside the scope of this document.
 
 # Custom Applications
 

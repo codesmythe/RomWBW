@@ -1195,8 +1195,8 @@ Returns the current Line Characteristics (DE) of the specified Character
 Returns device information for the specified Character Unit (C).  The 
 status (A) is a standard HBIOS result code.
 
-The two high bits of Device Attribute (C) are: 00 = RS/232, 01 = Terminal,
-10 = Parallel.  The remaining bits should be ignored and are used
+The two high bits of Device Attribute (C) are: 00 = RS/232, 10 = Terminal,
+01 = Parallel.  The remaining bits should be ignored and are used
 internally.
 
 Device Type (D) indicates the specific hardware driver that handles the 

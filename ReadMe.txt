@@ -1,6 +1,6 @@
 RomWBW Introduction
 Wayne Warthen (wwarthen@gmail.com)
-10 Nov 2026
+22 Nov 2026
 
 
 
