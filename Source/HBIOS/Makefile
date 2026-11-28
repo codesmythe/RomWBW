@@ -57,8 +57,8 @@ DIST_ROMS := \
 
 # Below, as needed, a shell script is used to select
 # the ROM identifier to be built.  The script generates
-# a one line makefile that is subsequently included
-# in this makefile.
+# a one line makefile that is then included to set the
+# ROM variable.
 
 ifndef ROM
     ROMFILE := rom.mk
@@ -69,17 +69,13 @@ ifndef ROM
         REAL_GOALS := all
     endif
 
-    # When $(ROMFILE) is updated below, make will immediately
-    # initiate a restart from scratch incorporating the updated
-    # $(ROMFILE).
-
     ifneq ($(REAL_GOALS),)
-        .DUMMY := $(shell chmod +x ./RomSel.sh)
-        .DUMMY := $(shell ROMFILE="$(ROMFILE)" ROM_PLATFORM="$(ROM_PLATFORM)" ROM_CONFIG="$(ROM_CONFIG)" ./RomSel.sh </dev/tty >&2)
-        ifeq ($(.SHELLSTATUS),0)
+        # Below is a little funky -- accommodating old version of make on MacOS
+        ROMSEL := $(shell ROMFILE="$(ROMFILE)" ROM_PLATFORM="$(ROM_PLATFORM)" ROM_CONFIG="$(ROM_CONFIG)" sh ./RomSel.sh </dev/tty >&2 && echo OK)
+        ifeq ($(ROMSEL),OK)
             include $(ROMFILE)
-	else
-            $(error No ROM configuration(s) specified for build!)
+        else
+            $(error ROM configuration selection failed!)
         endif
     endif
 endif

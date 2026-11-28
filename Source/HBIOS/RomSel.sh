@@ -5,9 +5,9 @@ set -e
 
 echo "=== Interactive ROM Identifier Selection ==="
 
-printf "ROMFILE: %s\n" ${ROMFILE}
-printf "ROM_PLATFORM: %s\n" ${ROM_PLATFORM}
-printf "ROM_CONFIG: %s\n" ${ROM_CONFIG}
+# printf "ROMFILE: %s\n" ${ROMFILE}
+# printf "ROM_PLATFORM: %s\n" ${ROM_PLATFORM}
+# printf "ROM_CONFIG: %s\n" ${ROM_CONFIG}
 
 if ! { [ -t 0 ] || [ -c /dev/tty ]; }; then
 	echo "ERROR: Not running in an interactive terminal context."
@@ -36,13 +36,3 @@ done
 echo "ROM := ${ROM_PLATFORM}_${ROM_CONFIG}" >${ROMFILE}
 
 exit 0
-
-
-
-# printf "Enter ROM identifier (<plt>_<cfg>): "
-# read CHOICE
-# if [ -z "$CHOICE" ]; then
-# 	echo "ERROR: No selection made. Aborting."
-# 	exit 1
-# fi
-# echo "ROM := $CHOICE" >$ROMFILE
