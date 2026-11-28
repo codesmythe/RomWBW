@@ -8,20 +8,42 @@
 ;__________________________________________________________________________________________________
 ;
 ; TODO:
+;
+;
+; KNOWN HARDWARE PARALLEL PORTS:
+;
+;   Hardware	Ports
+;   --------	-----
+;   VDU		F4-F7
+;   N8		84-87
+;
+#IF (PPKMODE == PPKMODE_VDU)
+PPK_IO_BASE	.EQU	$F4
+#ENDIF
+#IF (PPKMODE == PPKMODE_N8)
+PPK_IO_BASE	.EQU	$84
+#ENDIF
+;
+PPK_IO_PPIA	.EQU	PPK_IO_BASE + 0
+PPK_IO_PPIB	.EQU	PPK_IO_BASE + 1
+PPK_IO_PPIC	.EQU	PPK_IO_BASE + 2
+PPK_IO_PPIX	.EQU	PPK_IO_BASE + 3
+;
 ;__________________________________________________________________________________________________
 ; DATA CONSTANTS
 ;__________________________________________________________________________________________________
 ;
 ; DRIVER DATA OFFSETS (FROM IY)
 ;
-; IY POINTS TO THE VIDEO DRIVER'S CONFIG BLOCK.  THE KEYBOARD CONFIG
+; THE KEYBOARD PRIVATE CONFIG
 ; STARTS AT CFG_VDAKBD, JUST AFTER THE 8 BYTE STANDARD HEADER (SEE
 ; STD.ASM DRIVER CONFIG BLOCK STANDARD OFFSETS).
 ;
-PPK_PPIA	.EQU	CFG_VDAKBD + 0	; PPI PORT A
-PPK_PPIB	.EQU	CFG_VDAKBD + 1	; PPI PORT B
-PPK_PPIC	.EQU	CFG_VDAKBD + 2	; PPI PORT C
-PPK_PPIX	.EQU	CFG_VDAKBD + 3	; PPI CONTROL PORT
+PPK_MODE	.EQU	CFG_KBD + 0	; PPK MODE (VDU, ETC)
+PPK_PPIA	.EQU	CFG_KBD + 1	; PPI PORT A
+PPK_PPIB	.EQU	CFG_KBD + 2	; PPI PORT B
+PPK_PPIC	.EQU	CFG_KBD + 3	; PPI PORT C
+PPK_PPIX	.EQU	CFG_KBD + 4	; PPI CONTROL PORT
 ;
 ; DRIVER CONSTANTS
 ;
@@ -48,15 +70,12 @@ ORG_PPK	.EQU	$
 	.DW	SIZ_PPK			; MODULE SIZE
 	.DW	PPK_INITPHASE		; ADR OF INIT PHASE HANDLER
 ;
-; WARNING: KEYBOARD DRIVERS ARE INITIALIZED BY VDA DRIVERS
-; AND SHOULD NOT BE INITIALIZED BY INITPHASE CALLS.
-;
 PPK_INITPHASE:
 	; INIT PHASE HANDLER, A=PHASE
 	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
 	;JP	Z,PPK_PREINIT		; DO PREINIT
-	;CP	HB_PHASE_INIT		; INIT PHASE?
-	;JP	Z,PPK_INIT		; DO INIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,PPK_INIT		; DO INIT
 	RET				; DONE
 ;
 ;__________________________________________________________________________________________________
@@ -73,40 +92,107 @@ PPK_REPEAT	.DB	0	; CURRENT REPEAT RATE
 PPK_IDLE	.DB	0	; IDLE COUNT
 PPK_WAITTO	.DW	0	; TIMEOUT WAIT LOOP COUNT (COMPUTED IN INIT)
 ;
-	DEVECHO	"PPK: ENABLED\n"
+		DEVECHO	"PPK:"
+		DEVECHO " MODE="
+;
+#IF (PPKMODE = PPKMODE_VDU)
+		DEVECHO "VDU"
+#ENDIF
+#IF (PPKMODE = PPKMODE_N8)
+		DEVECHO "N8"
+#ENDIF
+		DEVECHO " IO="
+		DEVECHO PPK_IO_BASE
+		DEVECHO " ENABLED"
+		DEVECHO	"\n"
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION
 ;__________________________________________________________________________________________________
 ;
 PPK_INIT:
+	LD	IY,PPK_IDAT		; POINTER TO INSTANCE DATA
 	CALL	NEWLINE			; FORMATTING
 	PRTS("PPK: IO=0x$")
 	LD	A,(IY+PPK_PPIA)
 	CALL	PRTHEXBYTE
 ;
+	PRTS(" MODE=$")			; TAG
+	LD	A,(IY+PPK_MODE)		; GET MODE VALUE
+	LD	DE,PPK_STR_MODE_VDU
+	CP	PPKMODE_VDU
+	JR	Z,PPK_INIT1
+	LD	DE,PPK_STR_MODE_N8
+	CP	PPKMODE_N8
+	JR	Z,PPK_INIT1
+	LD	DE,PPK_STR_MODE_UNK
+;
+PPK_INIT1:
+	CALL	WRITESTR
+;
 	; PRECOMPUTE TIMEOUT LOOP COUNT (CPU KHZ / 16)
 	LD	HL,(CB_CPUKHZ)		; GET CPU SPEED IN KHZ
 	LD	B,4			; SHIFT 4 TIMES TO DIVIDE BY 16
-PPK_INIT1:
+PPK_INIT2:
 	SRL	H			; RIGHT SHIFT
 	RR	L			; ... TO DIVIDE
-	DJNZ	PPK_INIT1		; LOOP UNTIL DONE DIVIDING
+	DJNZ	PPK_INIT2		; LOOP UNTIL DONE DIVIDING
 	LD	(PPK_WAITTO),HL		; SAVE RESULT FOR USE LATER
 ;
 	CALL 	PPK_INITPORT		; SETS PORT C SO CAN INPUT AND OUTPUT
-
+;
 	LD	A,PPK_DEFRPT		; GET DEFAULT REPEAT RATE
 	LD	(PPK_REPEAT),A		; SAVE IT
 	LD	A,PPK_DEFSTATE		; GET DEFAULT STATE
 	LD	(PPK_STATE),A		; SAVE IT
-
+;
+	CALL	PPK_DETECT		; CHECK FOR PPI
+	JR	Z,PPK_INIT3		; IF THERE, CONTINUE
+	PRTS(" NOT PRESENT$")		; DIAGNOSE PROBLEM
+	OR	$FF			; SIGNAL FAILURE
+	RET				; BAIL OUT
+;
+PPK_INIT3:
 	CALL 	PPK_RESET		; RESET THE KEYBOARD
 	CALL	PPK_SETLEDS		; UPDATE LEDS BASED ON CURRENT TOGGLE STATE BITS
 	CALL	PPK_SETRPT		; UPDATE REPEAT RATE BASED ON CURRENT SETTING
-	
+;
+	PUSH	IY			; DE := INSTANCE DATA PTR
+	POP	DE			; ... FROM CALLER'S IY
+	CALL	KBD_ADDENT		; ADD ENTRY, A := UNIT ASSIGNED
+	LD	(IY+CFG_UNIT),A		; RECORD HBIOS UNIT NUMBER ASSIGNED
+;	
 	XOR	A			; SIGNAL SUCCESS
 	RET
+;
+; INSTANCE DATA
+;
+PPK_IDAT:
+	.DW	PPK_FNTBL		; DRIVER FUNCTION TABLE ADDRESS				
+	.DB	'K'			; DRIVER TYPE						
+	.DB	$FF			; HBIOS UNIT NUMBER (FILLED DYNAMICALLY, $FF=NONE)	
+	.DB	0			; DRIVER UNIT NUMBER (ONLY ONE UNIT POSSIBLE)		
+	.DB	ERR_NONE		; DEVICE STATUS (HBIOS STATUS)				
+	.DW	PPK_STR_TAG		; DRIVER TAG STRING PTR					
+	.DB	PPKMODE			; PPK MODE
+	.DB	PPK_IO_PPIA		; 8255 PORT A
+	.DB	PPK_IO_PPIB		; 8255 PORT B
+	.DB	PPK_IO_PPIC		; 8255 PORT C
+	.DB	PPK_IO_PPIX		; 8255 PORT X
+;
+PPK_STR_TAG	.TEXT	"PPK$"
+;
+; DRIVER FUNCTION TABLE
+;
+PPK_FNTBL:
+	.DW	PPK_STAT
+	.DW	PPK_FLUSH
+	.DW	PPK_READ
+	.DW	PPK_DEVICE
+#IF (($ - PPK_FNTBL) != (KBD_FNCNT * 2))
+	.ECHO	"*** INVALID PPK FUNCTION TABLE ***\n"
+	!!!!!
+#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD STATUS
@@ -127,6 +213,15 @@ PPK_STAT:
 PPK_STAT1:
 	CALL	PPK_DECODE		; CHECK THE KEYBOARD
 	JP	Z,CIO_IDLE		; RET VIA IDLE PROCESSING IF NO KEY
+	RET
+;
+;__________________________________________________________________________________________________
+; KEYBOARD FLUSH
+;__________________________________________________________________________________________________
+;
+PPK_FLUSH:
+	XOR	A			; A = 0
+	LD	(PPK_STATUS),A		; CLEAR STATUS
 	RET
 ;
 ;__________________________________________________________________________________________________
@@ -156,12 +251,13 @@ PPK_READ:
 	RET
 ;
 ;__________________________________________________________________________________________________
-; KEYBOARD FLUSH
+; KEYBOARD DEVICE
 ;__________________________________________________________________________________________________
 ;
-PPK_FLUSH:
-	XOR	A			; A = 0
-	LD	(PPK_STATUS),A		; CLEAR STATUS
+PPK_DEVICE:
+	LD	D,KBDDEV_PPK		; DEVICE TYPE
+	LD	E,(IY+CFG_DEVNUM)	; PHYSICAL UNIT
+	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
 ;__________________________________________________________________________________________________
@@ -286,6 +382,32 @@ PPK_PUTDATA2:
 	CALL	PPK_CLKLO		; SET CLOCK LOW
 	
 	RET
+;
+;__________________________________________________________________________________________________
+;
+; PROBE FOR PPI HARDWARE
+;
+; ON RETURN, ZF SET INDICATES HARDWARE FOUND
+;
+PPK_DETECT:
+;
+	; TEST FOR PPI EXISTENCE
+	; WE SETUP THE PPI TO WRITE, THEN WRITE A VALUE OF $A5
+	; TO PORT A (DATALO), THEN READ IT BACK.  IF THE PPI IS THERE
+	; THEN THE BUS HOLD CIRCUITRY WILL READ BACK THE $A5. SINCE
+	; WE ARE IN WRITE MODE, AN IDE CONTROLLER WILL NOT BE ABLE TO
+	; INTERFERE WITH THE VALUE BEING READ.
+;
+	LD	A,10000010B		; SET DATA BUS DIRECTION TO WRITE
+	LD	C,(IY+PPK_PPIX)		; PPI CONTROL WORD
+	OUT	(C),A			; WRITE IT
+;
+	LD	C,(IY+PPK_PPIA)		; PPI PORT A
+	LD	A,$A5			; TEST VALUE
+	OUT	(C),A			; PUSH VALUE TO PORT
+	IN	A,(C)			; GET PORT VALUE
+	CP	$A5			; CHECK FOR TEST VALUE
+	RET				; AND RETURN
 ;
 ;__________________________________________________________________________________________________
 PPK_INITPORT:
@@ -800,6 +922,12 @@ PPK_DECNEW:	; START NEW KEYPRESS (CLEAR ALL STATUS BITS)
 	XOR	A			; A = 0
 	LD	(PPK_STATUS),A		; CLEAR STATUS
 	JP	PPK_DEC1		; RESTART THE ENGINE
+;
+; DRIVER DATA
+;
+PPK_STR_MODE_VDU	.TEXT	"VDU$"
+PPK_STR_MODE_N8		.TEXT	"N8$"
+PPK_STR_MODE_UNK	.TEXT	"???$"
 ;
 #IF (PPKKBLOUT == KBD_US)
 ;__________________________________________________________________________________________________

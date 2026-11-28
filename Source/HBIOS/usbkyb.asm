@@ -3,8 +3,10 @@
 ; CH376 NATIVE USB KEYBOARD DRIVER
 ;==================================================================================================
 ;
-; This driver is designed to work within the TMS video driver for a CRT solution.
-
+; STANDALONE KEYBOARD DRIVER.  REGISTERS ITSELF IN THE HBIOS KBD
+; UNIT TABLE (KBD_ADDENT) DURING THE INIT PHASE IF A USB KEYBOARD IS
+; FOUND.  REQUIRES THE CH376 NATIVE USB DRIVER (USB.ASM), WHICH MUST BE
+; INITIALIZED (DEVICES ENUMERATED) BEFORE THIS MODULE.
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE HEADER
@@ -15,159 +17,171 @@ ORG_USB_KYB	.EQU	$
 	.DW	SIZ_USB_KYB		; MODULE SIZE
 	.DW	USB_KYB_INITPHASE	; ADR OF INIT PHASE HANDLER
 ;
-; WARNING: KEYBOARD DRIVERS ARE INITIALIZED BY VDA DRIVERS
-; AND SHOULD NOT BE INITIALIZED BY INITPHASE CALLS.
-;
 USB_KYB_INITPHASE:
 	; INIT PHASE HANDLER, A=PHASE
 	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
 	;JP	Z,USB_KYB_PREINIT	; DO PREINIT
-	;CP	HB_PHASE_INIT		; INIT PHASE?
-	;JP	Z,USB_KYB_INIT	; DO INIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,USB_KYB_INIT	; DO INIT
 	RET				; DONE
-
+;
+		DEVECHO	"USB_KYB: ENABLED\n"
+;
 #IF (!USBENABLE)
-	.ECHO	"*** TMSMODE: TMSMODE_MSXUKY REQUIRES CHNATIVEENABLE***\n"
-	!!!!! *** TMSMODE: TMSMODE_MSXUKY REQUIRES CHNATIVEENABLE***
-_usb_kyb_status:
-_usb_kyb_flush:
+	.ECHO	"*** USB_KYB: USB_KYB REQUIRES USBENABLE ***\n"
+	!!!	; FORCE AN ASSEMBLY ERROR
 #ENDIF
-
-
+;
 #DEFINE DEFM	.DB
 #DEFINE DEFB	.DB
 #DEFINE DEFW	.DW
-
+;
 #IF (!USB_EZ80)
   #IF (SYSTIM == TM_NONE)
-	.ECHO	"*** ERROR: MKY REQUIRES SYSTEM TIMER -- NONE CONFIGURED!!!\n"
+	.ECHO	"*** ERROR: USB_KYB REQUIRES SYSTEM TIMER -- NONE CONFIGURED!!!\n"
 	!!!	; FORCE AN ASSEMBLY ERROR
   #ENDIF
 #ENDIF
-
+;
 #include "./ch376-native/keyboard.s"
-
-#IF (USB_EZ80)
-USB_KYB_INIT	.EQU	_keyboard_init
-
-#ELSE
+;
+;__________________________________________________________________________________________________
+; KEYBOARD INITIALIZATION
+;__________________________________________________________________________________________________
+;
+USB_KYB_INIT:
+	LD	IY,UKY_IDAT		; POINTER TO INSTANCE DATA
+	PUSH	IY
+	CALL	_keyboard_init		; A := 1 IF KEYBOARD FOUND, 0 IF NOT
+	POP	IY
+	OR	A			; SET FLAGS
+	RET	Z			; NOT FOUND, DO NOT REGISTER
+;
+#IF (!USB_EZ80)
+	; INSTALL TIMER TICK HANDLER TO SCAN KEYBOARD
+	LD	HL,(VEC_TICK+1)		; SAVE EXISTING TICK VECTOR
+	LD	(VEC_USB_KYB_TICK+1),HL	; ... AS OUR CHAIN TARGET
+	LD	HL,USB_KYB_TICK		; INSTALL OUR HANDLER
+	LD	(VEC_TICK+1),HL		; ... (SINGLE INSTRUCTION, INT SAFE)
+#ENDIF
+;
+	; REGISTER AS KEYBOARD DEVICE
+	PUSH	IY			; DE := INSTANCE DATA PTR
+	POP	DE			; ... FROM CALLER'S IY
+	CALL	KBD_ADDENT		; ADD ENTRY, A := UNIT ASSIGNED
+	LD	(IY+CFG_UNIT),A		; RECORD HBIOS UNIT NUMBER ASSIGNED
+;
+	XOR	A			; SIGNAL SUCCESS
+	RET
+;
+; INSTANCE DATA
+;
+UKY_IDAT:
+	.DW	UKY_FNTBL		; DRIVER FUNCTION TABLE ADDRESS
+	.DB	'K'			; DRIVER TYPE
+	.DB	$FF			; HBIOS UNIT NUMBER (FILLED DYNAMICALLY, $FF=NONE)
+	.DB	0			; DRIVER UNIT NUMBER (ONLY ONE UNIT POSSIBLE)
+	.DB	ERR_NONE		; DEVICE STATUS (HBIOS STATUS)
+	.DW	UKY_STR_TAG		; DRIVER TAG STRING PTR
+;
+UKY_STR_TAG	.TEXT	"USB_KYB$"
+;
+; DRIVER FUNCTION TABLE
+;
+UKY_FNTBL:
+	.DW	UKY_STAT
+	.DW	UKY_FLUSH
+	.DW	UKY_READ
+	.DW	UKY_DEVICE
+#IF (($ - UKY_FNTBL) != (KBD_FNCNT * 2))
+	.ECHO	"*** INVALID UKY FUNCTION TABLE ***\n"
+	!!!!!
+#ENDIF
+;
+#IF (!USB_EZ80)
+;__________________________________________________________________________________________________
+; TIMER TICK HANDLER
+;__________________________________________________________________________________________________
+;
 ; COUNT FOR INTERRUPT HANDLER TO TRIGGER KEYBOARD SCANNER (EG: SCAN KEYBOARD ONLY EVERY 2ND INTERRUPT (2/60))
 SCAN_INT_PERIOD:	.EQU	2
-
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-UKY_INTSTK:	; 128 bytes for keyboard interrupt stack - need ~52 bytes???
-
-USB_KYB_INIT:
-	CALL	_keyboard_init
-	OR	A
-	RET	Z
-
-	; INSTALL INTERRUPT HANDLER
-	LD	HL, (VEC_TICK+1)
-	LD	(VEC_USB_KYB_TICK+1), HL
-
-	LD	HL, USB_KYB_TICK
-	LD	(VEC_TICK+1), HL
-
-	RET
-
+;
+	.FILL	128,0			; KEYBOARD INTERRUPT STACK (NEEDS ~52 BYTES)
+UKY_INTSTK:
+;
 USB_KYB_TICK:
-	LD      A, SCAN_INT_PERIOD	; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.
+	LD	A,SCAN_INT_PERIOD	; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.
 UKY_SCNCNT	.EQU	$ - 1
-	DEC     A
-	LD      (UKY_SCNCNT), A
-	JP	NZ, HB_TICK
-
-	LD      A, SCAN_INT_PERIOD
-	LD      (UKY_SCNCNT), A
-
-	; we gonna need a bigger stack
-
+	DEC	A
+	LD	(UKY_SCNCNT),A
+	JP	NZ,HB_TICK
+;
+	LD	A,SCAN_INT_PERIOD
+	LD	(UKY_SCNCNT),A
+;
+	; WE NEED A BIGGER STACK
 	LD	(UKY_INT_SP),SP		; SAVE ORIGINAL STACK FRAME
-	LD	SP,UKY_INTSTK		; USE DEDICATED INT STACK FRAME IN HI MEM
-
+	LD	SP,UKY_INTSTK		; USE DEDICATED INT STACK FRAME
+;
 	CALL	_usb_kyb_tick
-
-	LD	SP, $FFFF		; RESTORE ORIGINAL STACK FRAME
+;
+	LD	SP,$FFFF		; RESTORE ORIGINAL STACK FRAME
 UKY_INT_SP	.EQU	$ - 2
 ;
-
-
 VEC_USB_KYB_TICK:
-	JP	HB_TICK
-
+	JP	HB_TICK			; CHAIN TO PREVIOUS TICK HANDLER
+;
 #ENDIF
-
-; ### Function 0x4C -- Keyboard Status (VDAKST)
 ;
-; Inputs:
-;   None
+;__________________________________________________________________________________________________
+; KEYBOARD STATUS (BF_KBDSTAT)
+;__________________________________________________________________________________________________
 ;
-; Outputs:
-;   A: Status / Codes Pending
+;   RETURNS A = NUMBER OF KEYCODES PENDING (0 = NONE).
+;   DOES IDLE PROCESSING WHEN NOTHING IS PENDING.
 ;
-; Return a count of the number of key Codes Pending (A) in the keyboard buffer.
-; If it is not possible to determine the actual number in the buffer, it is
-; acceptable to return 1 to indicate there are key codes available to read and
-; 0 if there are none available.
-; The value returned in register A is used as both a Status (A) code and the
-; return value. Negative values (bit 7 set) indicate a standard HBIOS result
-; (error) code. Otherwise, the return value represents the number of key codes
-; pending.
+UKY_STAT:
+	CALL	_usb_kyb_status		; A := KEYCODES PENDING
+	OR	A			; SET FLAGS
+	JP	Z,CIO_IDLE		; RET VIA IDLE PROCESSING IF NO KEY
+	RET
 ;
-UKY_STAT:	.EQU	_usb_kyb_status
-
-; ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
+;__________________________________________________________________________________________________
+; KEYBOARD FLUSH (BF_KBDFLUSH)
+;__________________________________________________________________________________________________
 ;
-; Inputs:
-;   None
-;
-; Outputs:
-;   A: standard HBIOS result code
-;
-; Purged and all contents discarded. The Status (A) is a standard HBIOS result code.
+;   DISCARDS ALL PENDING KEYCODES.  RETURNS A = 0.
 ;
 UKY_FLUSH	.EQU	_usb_kyb_flush
-
 ;
-; ### Function 0x4E -- Video Keyboard Read (VDAKRD)
+;__________________________________________________________________________________________________
+; KEYBOARD READ (BF_KBDREAD)
+;__________________________________________________________________________________________________
 ;
-; Inputs:
-;   None
+;   WAITS FOR AND RETURNS THE NEXT KEYCODE.
+;   RETURNS A = 0, E = KEYCODE, C = 0 (NO SCANCODE), D = 0 (NO STATE)
 ;
-; Outputs:
-;   A: Status
-;   E: Keycode
-;
-; Read the next key data from the keyboard. If a buffer is used, return the next key code in the buffer.
-; If no key data is available, this function will wait indefinitely for a key press. The Status (A) is a
-; standard HBIOS result code.
-;
-; The Keycode (E) is generally returned as appropriate ASCII values, if possible. Special keys, like
-; function keys and arrows, are returned as reserved codes.
+;   NOTE: THE NATIVE BUFFER IS FILLED BY THE TIMER TICK HANDLER, SO THIS
+;   WILL WAIT FOREVER IF CALLED WITH INTERRUPTS DISABLED.
 ;
 UKY_READ:
-	CALL	_usb_kyb_read
-	LD	A, H
+	CALL	_usb_kyb_read		; H := 0 IF KEY, L := KEYCODE
+	LD	A,H
 	OR	A
-	JR	NZ, UKY_READ
-	LD	E, L
-	XOR	A
+	JR	NZ,UKY_READ		; NO KEY YET, LOOP
+	LD	E,L			; KEYCODE TO E
+	LD	C,A			; NO SCANCODE
+	LD	D,A			; NO STATE BITS
+	RET				; A = 0, SUCCESS
+;
+;__________________________________________________________________________________________________
+; KEYBOARD DEVICE
+;__________________________________________________________________________________________________
+;
+UKY_DEVICE:
+	LD	D,KBDDEV_USBKYB		; DEVICE TYPE
+	LD	E,(IY+CFG_DEVNUM)	; PHYSICAL UNIT
+	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
 ;--------------------------------------------------------------------------------------------------
@@ -176,7 +190,7 @@ UKY_READ:
 ;
 END_USB_KYB	.EQU	$
 SIZ_USB_KYB	.EQU	END_USB_KYB - ORG_USB_KYB
-;	
+;
 	MEMECHO	"USB_KYB occupies "
 	MEMECHO	SIZ_USB_KYB
 	MEMECHO	" bytes.\n"

@@ -40,7 +40,7 @@ will need to build a new HBIOS image customised for your platform.  Please famil
 
 The usb driver is divided into a few sub-system, which can be individually enabled within the standard HBIOS config files.
 
-For activating the full native USB support, the non native CH365 drivers need to be disabled and the relevant `USB` drivers enabled
+For activating the full native USB support, the non native CH375/376 drivers need to be disabled and the relevant `USB` drivers enabled
 
 Example:
 
@@ -52,6 +52,7 @@ USB_FORCE	.SET	TRUE		; USB: DISABLE AUTO-DETECTION OF MODULE - ASSUME ITS INSTAL
 USB_EZ80	.SET	FALSE		; USB: DELEGATE USB DRIVERS TO EZ80'S FIRMWARE
 USB_SCSI	.SET	TRUE		; USB: ENABLE CH376 NATIVE MASS STORAGE DEVICES (REQUIRES USBENABLE)
 USB_UFI		.SET	TRUE		; USB: ENABLE CH376 NATIVE UFI FLOPPY DISK DEVICES (REQUIRES USBENABLE)
+USB_KYB		.SET	TRUE		; USB: ENABLE CH376 NATIVE USB KEYBOARD DRIVER (REQUIRES USBENABLE)
 ```
 
 As the USB driver is a fairly large, you may need to disable other HBIOS drivers in your configuration.  As such, it is
@@ -75,9 +76,12 @@ PPIDEENABLE   .SET    FALSE     ; PPIDE: ENABLE PARALLEL PORT IDE DISK DRIVER (P
 
 ### base-drv `USBENABLE`
 
-The `base-drv` system contains the core code to discover, enumerate, and communicate with USB devices.
+The `base-drv` core system can be enabled with the HBIOS config `USBENABLE`
 
-It also includes the driver code to enumerate and operating USB devices through a USB hub.
+The `base-drv` system contains the core code to discover, enumerate, and 
+communicate with USB devices.    It also includes the driver code to 
+enumerate and operating USB devices through a USB hub. It is required by 
+all of the functional drivers below.
 
 ### scsi-drv `USB_SCSI`
 
@@ -91,11 +95,9 @@ The `ufi-drv` system can be enabled with the HBIOS config `USB_UFI`
 
 When activated, access to 3.5" Floppy USB devices will be enabled.
 
-### keyboard `TMSMODE_MSXUKY`
+### keyboard `USB_KYB`
 
-The `keyboard` system can be enabled with the inferred config entry `USBKYBENABLE`
-
-This config item is not to be directly set, but is activated via the TMS keyboard driver
+The `keyboard` system can be enabled with the HBIOS config `USB_KYB`
 
 Example configuration, combined with the TMS VDP module driver.
 
@@ -104,6 +106,7 @@ TMSENABLE    .SET   TRUE              ; TMS: ENABLE TMS9918 VIDEO/KBD DRIVER (TM
 TMSMODE      .SET   TMSMODE_MSXUKY    ; TMS: DRIVER MODE: TMSMODE_[SCG|N8|MSX|MSXKBD|MSXMKY|MBC|COLECO|DUO|NABU|MSXUKY|N8PC]
 TMS80COLS    .SET   FALSE             ; TMS: ENABLE 80 COLUMN SCREEN, REQUIRES V9958
 TMSTIMENABLE .SET   TRUE              ; TMS: ENABLE TIMER INTERRUPTS (REQUIRES IM1)
+USB_KYB      .SET   TRUE              ; USB: ENABLE CH376 NATIVE USB KEYBOARD DRIVER (REQUIRES USBENABLE)
 ```
 
 When activated, usb keyboards can be used as input devices.

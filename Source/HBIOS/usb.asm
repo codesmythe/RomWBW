@@ -3,6 +3,9 @@
 ; CH376 NATIVE USB DRIVER
 ;==================================================================================================
 ;
+#DEFINE DEFM	.DB
+#DEFINE DEFB	.DB
+#DEFINE DEFW	.DW
 ;
 ;--------------------------------------------------------------------------------------------------
 ;   HBIOS MODULE HEADER
@@ -20,10 +23,10 @@ USB_INITPHASE:
 	CP	HB_PHASE_INIT		; INIT PHASE?
 	JP	Z,USB_INIT		; DO INIT
 	RET				; DONE
-
-#DEFINE DEFM	.DB
-#DEFINE DEFB	.DB
-#DEFINE DEFW	.DW
+;
+	DEVECHO	"USB: IO="
+	DEVECHO	USB_DAT_PORT
+	DEVECHO	"\n"
 
 CHNATIVEEZ80		.EQU	USB_EZ80
 

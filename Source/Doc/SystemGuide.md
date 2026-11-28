@@ -891,6 +891,7 @@ function groups:
 | Disk I/O (DIO)              | [SYSGET Subfunction 0x11 -- Get Disk Unit Function (DIOFN)]   |
 | Video Display (VDA)         | [SYSGET Subfunction 0x41 -- Get Video Unit Function (VDAFN)]  |
 | Sound (SND)                 | [SYSGET Subfunction 0x51 -- Get Sound Unit Function (SNDFN)]  |
+| Keyboard (KBD)              | [SYSGET Subfunction 0x71 -- Get Keyboard Unit Function (KBDFN)] |
 
 ### Using FastPath
 
@@ -1044,7 +1045,7 @@ below enumerates these values.
 |-----------------|-------:|------------------------------------------|--------------|
 | CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm     |
 | CIODEV_ASCI     | 0x01   | Z180 Built-in Serial Ports               | asci.asm     |
-| CIODEV_TERM     | 0x02   | Terminal                                 | ansi.asm     |
+| CIODEV_TERM     | 0x02   | Reserved (formerly Terminal)             | --           |
 | CIODEV_PRPCON   | 0x03   | PropIO Serial Console Interface          | prp.asm      |
 | CIODEV_PPPCON   | 0x04   | ParPortProp Serial Console Interface     | ppp.asm      |
 | CIODEV_SIO      | 0x05   | Zilog Serial Port Interface              | sio.asm      |
@@ -1058,7 +1059,12 @@ below enumerates these values.
 | CIODEV_ESPSER   | 0x0D   | ESP32 Serial Port                        | esp.asm      |
 | CIODEV_SCON     | 0x0E   | S100 Console                             | scon.asm     |
 | CIODEV_SSER     | 0x0F   | Simple Serial Console                    | sser.asm     |
-| CIODEV_EZ80UART | 0x10   | eZ80 Built-in UART0 Interface            | ez80uart.asm | 
+| CIODEV_EZ80UART | 0x10   | eZ80 Built-in UART0 Interface            | ez80uart.asm |
+| CIODEV_DLPSER   | 0x11   | S100 Serial-IO DLP-USB Interface         | dlpser.asm   |
+| CIODEV_TSER     | 0x12   | S100 Trion FPGA Serial Interface         | tser.asm     |
+| CIODEV_SCC      | 0x13   | Zilog SCC Serial Interface               | scc.asm      |
+| CIODEV_TTY      | 0x14   | TTY Terminal Emulation                   | tty.asm      |
+| CIODEV_ANSI     | 0x15   | ANSI Terminal Emulation                  | ansi.asm     |
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
@@ -1175,11 +1181,25 @@ by the driver in this function call.
 | **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|
 | B: 0x05                                | A: Status                              |
-| C: Character Unit                      | DE: Line Characteristics               |
+| C: Character Unit                      | DE: Configuration                      |
 
-Returns the current Line Characteristics (DE) of the specified Character
- Unit (C). The definition of the line characteristics value is described
- above. The returned status (A) is a standard HBIOS result code.
+This function returns the Configuration (DE) of the CIO device
+specified in C.  The format of the configuration information is
+dependent on the port type of the device as indicated by the 2 high
+order bits returned in C of the CIODEVICE function.
+
+* **RS-232 (00)**: Returns the current Line Characteristics (DE) of the 
+  specified Character Unit (C). The definition of the line characteristics 
+  value is described above. The returned status (A) is a standard HBIOS 
+  result code.
+
+* **Parallel (01)**: Not yet defined.  Currently returns $FFFF.
+
+* **Terminal (10)**: Not yet defined.  Currently returns $FFFF.
+
+* **Terminal Emulation (11)**: Returns the current Video Unit (D) and 
+  Keyboard Unit (E) of the specified Character Unit (C).  The value $FF is 
+  returned for an unassigned unit.
 
 ### Function 0x06 -- Character I/O Device (CIODEVICE)
 
@@ -1195,9 +1215,13 @@ Returns the current Line Characteristics (DE) of the specified Character
 Returns device information for the specified Character Unit (C).  The 
 status (A) is a standard HBIOS result code.
 
-The two high bits of Device Attribute (C) are: 00 = RS/232, 10 = Terminal,
-01 = Parallel.  The remaining bits should be ignored and are used
-internally.
+The two high bits of Device Attribute (C) are the port type: 00 =
+RS/232, 01 = Parallel, 10 = Terminal, 11 = Terminal Emulation.  Bit 7
+is set for both kinds of terminal.  A Terminal (10) is a device that
+implements the terminal itself, such as a Propeller console.  A
+Terminal Emulation (11) unit is a terminal emulation module that uses
+a Video Unit and a Keyboard Unit (e.g., ANSI, TTY).  The remaining bits
+should be ignored and are used internally.
 
 Device Type (D) indicates the specific hardware driver that handles the 
 specified Character Unit.  Values are listed at the start of this 
@@ -2012,8 +2036,7 @@ HBIOS state change.  At this time the the events are:
 ## Video Display Adapter (VDA)
 
 The VDA functions are provided as a common interface to Video Display
-Adapters. Not all VDAs will include keyboard hardware. In this case, the
-keyboard functions should return a failure status.
+Adapters.  Keyboard functions have been moved to their own function group.
 
 All video units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
@@ -2086,28 +2109,6 @@ Attribute byte values are constructed using the following bit encoding:
 | 2       | Reverse    |
 | 1       | Underline  |
 | 0       | Blink      |
-
-The following codes are returned by a keyboard read to signify non-ASCII
-keystrokes:
-
-| **Value** | **Keystroke** | **Value** | **Keystroke** |
-|----------:|---------------|----------:|---------------|
-| 0xE0      | F1            | 0xF0      | Insert        |
-| 0xE1      | F2            | 0xF1      | Delete        |
-| 0xE2      | F3            | 0xF2      | Home          |
-| 0xE3      | F4            | 0xF3      | End           |
-| 0xE4      | F5            | 0xF4      | PageUp        |
-| 0xE5      | F6            | 0xF5      | PadeDown      |
-| 0xE6      | F7            | 0xF6      | UpArrow       |
-| 0xE7      | F8            | 0xF7      | DownArrow     |
-| 0xE8      | F9            | 0xF8      | LeftArrow     |
-| 0xE9      | F10           | 0xF9      | RightArrow    |
-| 0xEA      | F11           | 0xFA      | Power         |
-| 0xEB      | F12           | 0xFB      | Sleep         |
-| 0xEC      | SysReq        | 0xFC      | Wake          |
-| 0xED      | PrintScreen   | 0xFD      | Break         |
-| 0xEE      | Pause         | 0xFE      |               |
-| 0xEF      | App           | 0xFF      |               |
 
 ### Function 0x40 -- Video Initialize (VDAINI)
 
@@ -2346,77 +2347,21 @@ updated.  The Status (A) is a standard HBIOS result code.
 
 ### Function 0x4C -- Video Keyboard Status (VDAKST)
 
-| **Entry Parameters**                   | **Returned Values**                    |
-|----------------------------------------|----------------------------------------|
-| B: 0x4C                                | A: Status / Codes Pending              |
-| C: Video Unit                          |                                        |
-
-Return a count of the number of key Codes Pending (A) in the keyboard 
-buffer for the specified Video Unit (C). If it is not possible to 
-determine the actual number in the buffer, it is acceptable to return 1 
-to indicate there are key codes available to read and 0 if there are 
-none available.
-
-The value returned in register A is used as both a Status (A) code and 
-the return value. Negative values (bit 7 set) indicate a standard HBIOS 
-result (error) code.  Otherwise, the return value represents the number 
-of key codes pending.
+Deprecated -- keyboard functions have moved to the Keyboard (KBD)
+function group, see [Function 0x70 -- Keyboard Status (KBDSTAT)].
+Video drivers no longer implement this function and return ERR_NOFUNC.
 
 ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
 
-| **Entry Parameters**                   | **Returned Values**                    |
-|----------------------------------------|----------------------------------------|
-| B: 0x4D                                | A: Status                              |
-| C: Video Unit                          |                                        |
-
-If a keyboard buffer is in use on the Video Unit (C) specified, it 
-should be purged and all contents discarded.  The Status (A) is a 
-standard HBIOS result code.
+Deprecated -- keyboard functions have moved to the Keyboard (KBD)
+function group, see [Function 0x71 -- Keyboard Flush (KBDFLUSH)].
+Video drivers no longer implement this function and return ERR_NOFUNC.
 
 ### Function 0x4E -- Video Keyboard Read (VDAKRD)
 
-| **Entry Parameters**                   | **Returned Values**                    |
-|----------------------------------------|----------------------------------------|
-| B: 0x4E                                | A: Status                              |
-| C: Video Unit                          | C: Scancode                            |
-|                                        | D: Keystate                            |
-|                                        | E: Keycode                             |
-
-Read the next key data from keyboard of the specified Video Unit (C). If
-a keyboard buffer is used, return the next Keycode in the buffer. If 
-no key data is available, this function will wait indefinitely for a 
-keypress.  The Status (A) is a standard HBIOS result code.
-
-The Scancode (C) value is the raw scancode from the keyboard for the 
-keypress. Scancodes are optional and may not be implemented by the
-driver.  The Scancode values are driver dependent.  In the case of a
-PS/2 keyboard driver, they should be the PS/2 scancode.  Other keyboard
-drivers may return values appropriate for their specific keyboard.  If
-the driver does not implement this, it should return 0 in C.
-
-The Keystate (D) is a bitmap representing the value of all modifier keys
-and shift states as they existed at the time of the keystroke. The 
-bitmap is defined as:
-
-| **Bit** | **Keystate Indication**          |
-|---------|----------------------------------|
-| 7       | Key pressed was from the num pad |
-| 6       | Caps Lock was active             |
-| 5       | Num Lock was active              |
-| 4       | Scroll Lock was active           |
-| 3       | Windows key was held down        |
-| 2       | Alt key was held down            |
-| 1       | Control key was held down        |
-| 0       | Shift key was held down          |
-
-Not all of these bits may be relevant for all keyboards.  Any bit that
-is not relevant should be returned as 0.
-
-The Keycode (E) is generally returned as appropriate ASCII values, if 
-possible. Special keys, like function keys and arrows, are returned as 
-reserved codes as described at the start of this section.
-
-`\clearpage`{=latex}
+Deprecated -- keyboard functions have moved to the Keyboard (KBD)
+function group, see [Function 0x72 -- Keyboard Read (KBDREAD)].
+Video drivers no longer implement this function and return ERR_NOFUNC.
 
 ### Function 0x4F -- Read a character at current video position (VDARDC)
 
@@ -3009,6 +2954,137 @@ only need a single STOP (E=0).
 
 `\clearpage`{=latex}
 
+## Keyboard Interface (KBD)
+
+The keyboard function group provides a common interface to keyboard
+hardware.
+
+All keyboard units are assigned a Device Type ID which indicates
+the specific hardware device driver that handles the unit.  The table
+below enumerates their values.
+
+| **Device Type** | **ID** | **Description**                            | **Driver** |
+|-----------------|-------:|--------------------------------------------|------------|
+| KBDDEV_PSK      | 0x00   | 8242-based PS/2 Keyboard Interface         | psk.asm    |
+| KBDDEV_PPK      | 0x01   | 8255-based Keyboard Interface              | ppk.asm    |
+| KBDDEV_MKY      | 0x02   | MSX Keyboard Interface                     | mky.asm    |
+| KBDDEV_NABUKB   | 0x03   | NABU Keyboard Interface                    | nabukb.asm |
+| KBDDEV_USBKYB   | 0x04   | USB Keyboard Interface                     | usbkyb.asm |
+| KBDDEV_TKY      | 0x05   | S100 FPGA Keyboard Interface               | tky.asm    |
+
+The following codes are returned by a keyboard read to signify non-ASCII
+keystrokes (if supported by the keyboard):
+
+| **Value** | **Keystroke** | **Value** | **Keystroke** |
+|----------:|---------------|----------:|---------------|
+| 0xE0      | F1            | 0xF0      | Insert        |
+| 0xE1      | F2            | 0xF1      | Delete        |
+| 0xE2      | F3            | 0xF2      | Home          |
+| 0xE3      | F4            | 0xF3      | End           |
+| 0xE4      | F5            | 0xF4      | PageUp        |
+| 0xE5      | F6            | 0xF5      | PageDown      |
+| 0xE6      | F7            | 0xF6      | UpArrow       |
+| 0xE7      | F8            | 0xF7      | DownArrow     |
+| 0xE8      | F9            | 0xF8      | LeftArrow     |
+| 0xE9      | F10           | 0xF9      | RightArrow    |
+| 0xEA      | F11           | 0xFA      | Power         |
+| 0xEB      | F12           | 0xFB      | Sleep         |
+| 0xEC      | SysReq        | 0xFC      | Wake          |
+| 0xED      | PrintScreen   | 0xFD      | Break         |
+| 0xEE      | Pause         | 0xFE      |               |
+| 0xEF      | App           | 0xFF      |               |
+
+### Function 0x70 -- Keyboard Status (KBDSTAT)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x70                                | A: Status / Codes Pending              |
+| C: Keyboard Unit                       |                                        |
+
+Return a count of the number of key Codes Pending (A) in the keyboard 
+buffer for the specified Keyboard Unit (C). If it is not possible to 
+determine the actual number in the buffer, it is acceptable to return 1 
+to indicate there are key codes available to read and 0 if there are 
+none available.
+
+The value returned in register A is used as both a Status (A) code and 
+the return value. Negative values (bit 7 set) indicate a standard HBIOS 
+result (error) code.  Otherwise, the return value represents the number 
+of key codes pending.
+
+### Function 0x71 -- Keyboard Flush (KBDFLUSH)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x71                                | A: Status                              |
+| C: Keyboard Unit                       |                                        |
+
+If a keyboard buffer is in use on the Keyboard Unit (C) specified, it 
+should be purged and all contents discarded.  The Status (A) is a 
+standard HBIOS result code.
+
+### Function 0x72 -- Keyboard Read (KBDREAD)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x72                                | A: Status                              |
+| C: Keyboard Unit                       | C: Scancode                            |
+|                                        | D: Keystate                            |
+|                                        | E: Keycode                             |
+
+Read the next key data from the specified Keyboard Unit (C). If
+a keyboard buffer is used, return the next Keycode in the buffer. If 
+no key data is available, this function will wait indefinitely for a 
+keypress.  The Status (A) is a standard HBIOS result code.
+
+The Scancode (C) value is the raw scancode from the keyboard for the 
+keypress. Scancodes are optional and may not be implemented by the
+driver.  The Scancode values are driver dependent.  In the case of a
+PS/2 keyboard driver, they should be the PS/2 scancode.  Other keyboard
+drivers may return values appropriate for their specific keyboard.  If
+the driver does not implement this, it should return 0 in C.
+
+The Keystate (D) is a bitmap representing the value of all modifier keys
+and shift states as they existed at the time of the keystroke. The 
+bitmap is defined as:
+
+| **Bit** | **Keystate Indication**          |
+|---------|----------------------------------|
+| 7       | Key pressed was from the num pad |
+| 6       | Caps Lock was active             |
+| 5       | Num Lock was active              |
+| 4       | Scroll Lock was active           |
+| 3       | Windows key was held down        |
+| 2       | Alt key was held down            |
+| 1       | Control key was held down        |
+| 0       | Shift key was held down          |
+
+Not all of these bits may be relevant for all keyboards.  Any bit that
+is not relevant should be returned as 0.
+
+The Keycode (E) is generally returned as appropriate ASCII values, if 
+possible. Special keys, like function keys and arrows, are returned as 
+reserved codes as described at the start of this section.
+
+### Function 0x73 -- Keyboard Device (KBDDEVICE)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x73                                | A: Status                              |
+| C: Keyboard Unit                       | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+
+Reports device information about the specified Keyboard Unit (C).  The 
+Status (A) is a standard HBIOS result code.
+
+Device Type (D) indicates the specific hardware driver that handles the 
+specified Keyboard Unit (C).  Values are listed at the start of this 
+section. Device Number (E) indicates the physical device number assigned
+per driver.
+
+`\clearpage`{=latex}
+
 ## Extension (EXT)
 
 Helper (extension) functions that are not a core part of a BIOS.
@@ -3407,6 +3483,40 @@ standard HBIOS result code.
 This function will lookup the actual driver function address and
 unit data address inside the HBIOS driver.  On entry, place the
 SND function number to lookup in D and the SND unit number in E.
+On return, HL will contain the address of the requested function
+in the HBIOS driver (in the HBIOS bank).  DE will contain the
+associated unit data address (also in the HBIOS bank).  See
+Appendix A for details.  The returned Status (A) is a standard HBIOS 
+result code.
+
+This function can be used to speed up HBIOS calls by looking up the
+function and data address for a specific driver function.  After this,
+the caller can use interbank calls directly to the function in the
+driver which bypasses the overhead of the normal function invocation
+lookup.
+
+#### SYSGET Subfunction 0x70 -- Get Keyboard Device Unit Count (KBDCNT)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x70                                | E: Count                               |
+
+Return the Count (E) of keyboard device units.  The Status (A) is a 
+standard HBIOS result code.
+
+#### SYSGET Subfunction 0x71 -- Get Keyboard Unit Function (KBDFN)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x71                                | HL: Function Address                   |
+| D: Function                            | DE: Unit Data Address                  |
+| E: Unit                                |                                        |
+
+This function will lookup the actual driver function address and
+unit data address inside the HBIOS driver.  On entry, place the
+KBD function number to lookup in D and the KBD unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
 associated unit data address (also in the HBIOS bank).  See

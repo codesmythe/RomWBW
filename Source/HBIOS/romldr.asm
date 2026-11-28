@@ -444,7 +444,7 @@ prompt:
 wtkey:
 	; wait for a key or timeout
 	call	cst			; check for keyboard key
-	jr	nz,concmd		; if pending, do console command
+	jp	nz,concmd		; if pending, do console command
 	; NOTE Above is like a CALL, with a RET to reprompt: (manually pushed)
 ;
 #if (DSKYENABLE)
@@ -536,47 +536,90 @@ conpoll:
 conpoll1:
 	ld	a,c			; next char unit to test
 	cp	e			; is this the active console?
-	jr	z,conpoll2		; if so, don't test, move on
+	jr	z,conpoll5		; if so, don't test, move on
 	ld	(curcon),a		; make it current port
+;
+	; A serial device may be used as the keyboard for a terminal
+	; device.  In this case, a single serial input is serving
+	; two CIO units (its own unit and the terminal).
+	; This is a bit convoluted, but we basically need to prevent
+	; the polling routine from fighting over the one CIO unit
+;
+	; if (poll_unit is term) & (serkbd != $FF), then skip unit
+	ld	a,c
+	call	isterm
+	jr	nz,conpoll2		; not term, keep going
+	ld	a,VDAEMU_SERKBD
+	cp	$FF
+	jr	nz,conpoll5		; skip!
+;
+conpoll2:  
+	; if (act_unit is term) & (poll_unit == serkbd), then skip
+	ld	a,e
+	call	isterm
+	jr	nz,conpoll3		; not term, keep going
+	ld	a,c
+	cp	VDAEMU_SERKBD
+	jr	z,conpoll5		; skip!
+;
+conpoll3:
 	call	cst			; char waiting?
-	jr	z,conpoll2		; if no char, move on
+	jr	z,conpoll5		; if no char, move on
 	call	cin			; get char
 	cp	' '			; space char?
-	jr	z,conpoll1a		; if so, handle it
+	jr	z,conpoll4		; if so, handle it
 ;
 	; something other than a <space> was received, clear
 	; the pending console
 	or	$ff			; idle value
 	ld	(conpend),a		; save it
-	jr	conpoll2		; continue checking
+	jr	conpoll5		; continue checking
 ;
-conpoll1a:
+conpoll4:
 	; a <space> char was typed.  check to see if we just saw a
 	; <space> from this same unit.
 	ld	a,(conpend)		; pending con unit to A
 	cp	c			; compare to active unit
-	jr	z,conpoll3		; if =, second <space>, take con
+	jr	z,conpoll6		; if =, second <space>, take con
 	ld	a,c			; if not, unit to A
 	ld	(conpend),a		; and update pending console
 ;
-conpoll2:
+conpoll5:
 	inc	c			; next char unit
 	djnz	conpoll1		; loop till done
 	xor	a			; ret w/ Z for no takeover
-	jr	conpoll4		; all done, no takeover
+	jr	conpoll7		; all done, no takeover
 ;
-conpoll3:
+conpoll6:
 	; record a new console request
 	ld	a,(curcon)		; record the unit
 	ld	(newcon),a		; ... as new console
 	or	$ff			; ret w/ NZ for new con req
 ;
-conpoll4:
+conpoll7:
 	; restore active console and exit
 	ld	a,e			; restore active
 	ld	(curcon),a		; ... console
 	ret				; done, NZ if new con request
 ;
+; Check if unit specified in A is a terminal emulation unit
+; Returns Z if so, NZ if not
+; A is destroyed, all other registers preserved
+;
+isterm:
+	push	bc			; save BC
+	push	de			; save DE
+	push	hl			; save HL
+	ld	b,BF_CIODEVICE		; HBIOS CIO DEVICE call
+	ld	c,a			; CIO unit to C
+	rst	08			; call HBIOS
+	ld	a,c			; attributes to A
+	and	%11000000		; top two bits are port type
+	cp	%11000000		; is terminal emulation if bits are 11
+	pop	hl			; restore HL
+	pop	de			; restore DE
+	pop	bc			; restore BC
+	ret
   #endif
 #endif
 ;
@@ -645,7 +688,7 @@ runcmd0:
 	;;;jp	z,slclst		; if so, do it
 	;;;cp	'W'			; W = Rom WBW NVR Config Rom App
 	;;;jp	z,nvrconfig		; if so, do it
-	cp	'I'			; C = set console interface
+	cp	'I'			; I = set console interface
 	jp	z,setcon		; if so, do it
 	cp	'V'			; V = diagnostic verbosity
 	jp	z,setdl			; is so, do it
@@ -966,11 +1009,19 @@ setcon:
 	jp	nc,err_nocon		; handle invalid unit
 	ld	(newcon),a		; save validated console
 ;
+	; If not RS-232 device, ignore trailing baud rate
+	ld	c,a			; new console unit to C
+	ld	b,BF_CIODEVICE		; CIODEVICE function call
+	rst	08			; do it, C=unit attributes
+	ld	a,c			; put attributes in A
+	and	%11000000		; mask to port type
+	jr	nz,docon		; if not port type 00, just implement
+;
 	; Get baud rate
 	call	findws
 	call	skipws			; skip whitespace
 	call	isnum			; do we have a number?
-	jp	nz,docon		; if no we don't change baudrate
+	jr	nz,docon		; if no we don't change baudrate
 	push	de			; move char ptr
 	pop	ix			; ... to IX
 	call	getnum32		; get 32-bit number

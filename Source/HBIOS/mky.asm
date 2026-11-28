@@ -6,7 +6,6 @@
 ;
 ;======================================================================
 ; USAGE:
-;  THIS DRIVER CAN BE ACTIVED WITHIN THE TMS VIDEO DRIVER
 ;  ADD THE OPTION TO YOUR BUILD CONFIGURATION TO ACTIVATE THE KEYBOARD
 ;  DRIVER:
 ;	MKYENABLE	.SET	TRUE
@@ -162,18 +161,15 @@ S_SPACE		.EQU	$29
 ;
 ORG_MKY	.EQU	$
 ;
-	.DW	SIZ_MKY		; MODULE SIZE
+	.DW	SIZ_MKY			; MODULE SIZE
 	.DW	MKY_INITPHASE		; ADR OF INIT PHASE HANDLER
-;
-; WARNING: KEYBOARD DRIVERS ARE INITIALIZED BY VDA DRIVERS
-; AND SHOULD NOT BE INITIALIZED BY INITPHASE CALLS.
 ;
 MKY_INITPHASE:
 	; INIT PHASE HANDLER, A=PHASE
 	;CP	HB_PHASE_PREINIT	; PREINIT PHASE?
 	;JP	Z,MKY_PREINIT		; DO PREINIT
-	;CP	HB_PHASE_INIT		; INIT PHASE?
-	;JP	Z,MKY_INIT		; DO INIT
+	CP	HB_PHASE_INIT		; INIT PHASE?
+	JP	Z,MKY_INIT		; DO INIT
 	RET				; DONE
 
 SCANCODE_TBL:
@@ -198,8 +194,9 @@ SCANCODE_TBL:
 ;
 
 MKY_INIT:
+	LD	IY,MKY_IDAT		; POINTER TO INSTANCE DATA
 	CALL	NEWLINE			; FORMATTING
-	PRTS("MSXKYB: IO=0x$")
+	PRTS("MKY: IO=0x$")
 	LD	A, MKY_REGA
 	CALL	PRTHEXBYTE
 	CALL	PC_SPACE		; FORMATTING
@@ -207,12 +204,12 @@ MKY_INIT:
 #IF (MKYKBLOUT == KBD_US)
 	PRTS("US LAYOUT$")
 #ELSE
-#IF (MKYKBLOUT == KBD_DE)
+  #IF (MKYKBLOUT == KBD_DE)
 	PRTS("GERMAN LAYOUT$")
-#ELSE
+  #ELSE
 	FAIL !!!
 	UKNOWN KEYBOARD TYPE
-#ENDIF
+  #ENDIF
 #ENDIF
 
 ; MSX_NOTE: THE MSX BIOS SETS THE PPI CONFIGURATION AT BOOT AND IT SHOULD NOT BE CHANGED
@@ -238,16 +235,37 @@ MKY_INIT:
 	LD	HL, MKY_INT
 	LD	(VEC_TICK+1), HL
 
+	PUSH	IY			; DE := INSTANCE DATA PTR
+	POP	DE			; ... FROM CALLER'S IY
+	CALL	KBD_ADDENT		; ADD ENTRY, A := UNIT ASSIGNED
+	LD	(IY+CFG_UNIT),A		; RECORD HBIOS UNIT NUMBER ASSIGNED
+
+	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
-;__________________________________________________________________________________________________
-; KEYBOARD FLUSH
-;__________________________________________________________________________________________________
+; INSTANCE DATA
 ;
-MKY_FLUSH:
-	XOR	A			; A = 0
-	LD	(MKY_STATUS),A		; CLEAR STATUS
-	RET
+MKY_IDAT:
+	.DW	MKY_FNTBL		; DRIVER FUNCTION TABLE ADDRESS				
+	.DB	'K'			; DRIVER TYPE						
+	.DB	$FF			; HBIOS UNIT NUMBER (FILLED DYNAMICALLY, $FF=NONE)	
+	.DB	0			; DRIVER UNIT NUMBER (ONLY ONE UNIT POSSIBLE)		
+	.DB	ERR_NONE		; DEVICE STATUS (HBIOS STATUS)				
+	.DW	MKY_STR_TAG		; DRIVER TAG STRING PTR					
+;
+MKY_STR_TAG	.TEXT	"MKY$"
+;
+; DRIVER FUNCTION TABLE
+;
+MKY_FNTBL:
+	.DW	MKY_STAT
+	.DW	MKY_FLUSH
+	.DW	MKY_READ
+	.DW	MKY_DEVICE
+#IF (($ - MKY_FNTBL) != (KBD_FNCNT * 2))
+	.ECHO	"*** INVALID KBD FUNCTION TABLE ***\n"
+	!!!!!
+#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD STATUS
@@ -257,6 +275,15 @@ MKY_STAT:
 	CALL	MKY_SCAN		; SCAN AND SET SCANCODE FOR DETECTED KEY EVENT
 	CALL	MKY_DECODE		; DECODE THE SCANCODE INTO A KEYCODE
 	JP	Z, CIO_IDLE		; RET VIA IDLE PROCESSING IF NO KEY
+	RET
+;
+;__________________________________________________________________________________________________
+; KEYBOARD FLUSH
+;__________________________________________________________________________________________________
+;
+MKY_FLUSH:
+	XOR	A			; A = 0
+	LD	(MKY_STATUS),A		; CLEAR STATUS
 	RET
 ;
 ;__________________________________________________________________________________________________
@@ -283,6 +310,16 @@ MKY_READ:
 	LD	D, A			; SAVE THEM IN D
 	XOR	A			; SIGNAL SUCCESS
 	LD	(MKY_STATUS), A		; CLEAR STATUS TO INDICATE BYTE RECEIVED
+	RET
+;
+;__________________________________________________________________________________________________
+; KEYBOARD DEVICE
+;__________________________________________________________________________________________________
+;
+MKY_DEVICE:
+	LD	D,KBDDEV_MKY		; DEVICE TYPE
+	LD	E,(IY+CFG_DEVNUM)	; PHYSICAL UNIT
+	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
 ;__________________________________________________________________________________________________

@@ -149,10 +149,9 @@ plain comment lines.
 
   ```
   INTMODE ...
-  ;@DEPENDS INTMODE <= 3
-  ;@DEPENDS INTMODE != 3 || (CPUFAM = CPU_Z280 && MEMMGR = MM_Z280)
-  VDAEMU_SERKBD ...
-  ;@DEPENDS VDAEMU_SERKBD = $FF || !AUTOCON
+  ;@DEPENDS INTMODE <= 3 && (INTMODE != 3 || (CPUFAM = CPU_Z280 && MEMMGR = MM_Z280))
+  FP_USE_I2C ...
+  ;@DEPENDS !FPENABLE || I2CPCFENABLE || I2CBITENABLE || I2CEZ80ENABLE
   ```
 
 - The menu should refuse to save a config that breaks one, and

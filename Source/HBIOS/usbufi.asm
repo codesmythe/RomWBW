@@ -24,6 +24,8 @@ USB_UFI_INITPHASE:
 	CP	HB_PHASE_INIT		; INIT PHASE?
 	JP	Z,USB_UFI_INIT		; DO INIT
 	RET				; DONE
+;
+		DEVECHO	"USB_UFI: ENABLED\n"
 
 
 #include "./ch376-native/ufi-drv.s"

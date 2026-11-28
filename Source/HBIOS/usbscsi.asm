@@ -24,6 +24,8 @@ USB_SCSI_INITPHASE:
 	CP	HB_PHASE_INIT		; INIT PHASE?
 	JP	Z,USB_SCSI_INIT		; DO INIT
 	RET				; DONE
+;
+		DEVECHO	"USB_SCSI: ENABLED\n"
 
 #include "./ch376-native/scsi-drv.s"
 

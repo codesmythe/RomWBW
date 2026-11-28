@@ -9,6 +9,9 @@ Version 3.7
 - G?F: Added BASIC and Fortran to pSystem
 - WBW: Added CIO block input and output functions
 - WBW: Added RomWBW-specific (HBIOS) ZModem (rz/sz)
+- WDC: Add interactiong configuration tool (hbconfig)
+- WBW: Refactor disk driver common functions
+- WBW: Refactor terminal emulation, new independent keyboard API
 
 Version 3.6
 -----------
